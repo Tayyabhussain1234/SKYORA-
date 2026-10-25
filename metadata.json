@@ -1,0 +1,6 @@
+{
+  "name": "SKYORA — Global Weather",
+  "description": "Accurate, real-time weather information, hourly and 7-day forecasts, and atmospheric insights for cities throughout Pakistan and worldwide.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
