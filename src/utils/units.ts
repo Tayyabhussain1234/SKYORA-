@@ -24,6 +24,7 @@ export function formatSpeed(kmh: number, unit: UnitSystem): string {
 }
 
 export function formatVisibility(km: number, unit: UnitSystem): string {
+  if (km <= 0) return '—';
   if (unit === 'fahrenheit') {
     const miles = km * 0.621371;
     return `${miles >= 10 ? Math.round(miles) : miles.toFixed(1)} mi`;

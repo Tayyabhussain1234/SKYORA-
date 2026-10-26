@@ -1,14 +1,24 @@
 import React from 'react';
-import { Droplets, Wind, Gauge, Eye, Sun, Sunset, Sunrise, Compass } from 'lucide-react';
+import { Droplets, Wind, Gauge, Eye, Sun, Compass, Sunrise, Sunset } from 'lucide-react';
 import { WeatherInsights as IWeatherInsights, UnitSystem } from '../types/weather';
 import { formatSpeed, formatVisibility, formatPressure } from '../utils/units';
+import { SunProgressBar } from './SunProgressBar';
 
 interface WeatherInsightsProps {
   insights: IWeatherInsights;
   unit: UnitSystem;
+  sunriseIso?: string;
+  sunsetIso?: string;
+  timezone?: string;
 }
 
-export const WeatherInsights: React.FC<WeatherInsightsProps> = ({ insights, unit }) => {
+export const WeatherInsights: React.FC<WeatherInsightsProps> = ({
+  insights,
+  unit,
+  sunriseIso,
+  sunsetIso,
+  timezone,
+}) => {
   const {
     humidity,
     windSpeed,
@@ -158,7 +168,7 @@ export const WeatherInsights: React.FC<WeatherInsightsProps> = ({ insights, unit
             </p>
           </div>
           <div className="text-[11px] text-[#AAB8C9]/70 mt-3 group-hover/visibility:text-[#AAB8C9] transition-colors">
-            {visibility >= 10 ? 'Optimal horizon clarity' : 'Atmospheric particles detected'}
+            {visibility > 0 ? (visibility >= 10 ? 'Optimal horizon clarity' : 'Atmospheric particles detected') : 'Current visibility unavailable'}
           </div>
         </div>
 
@@ -187,32 +197,41 @@ export const WeatherInsights: React.FC<WeatherInsightsProps> = ({ insights, unit
           </div>
         </div>
 
-        {/* Card 6: Sunrise & Sunset */}
-        <div className="glass-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between card-hover-effect group/solar cursor-default col-span-2 md:col-span-1">
-          <div className="flex items-center justify-between text-xs text-[#AAB8C9] mb-2">
-            <span className="font-semibold uppercase tracking-wider text-[11px] group-hover/solar:text-[#FFD166] transition-colors">Solar Cycle</span>
-            <Sunrise className="w-4 h-4 text-[#FFD166] transition-transform duration-300 group-hover/solar:scale-125 group-hover/solar:-translate-y-0.5" />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-1 rounded-md hover:bg-white/5 transition-colors">
-              <div className="flex items-center gap-2">
-                <Sunrise className="w-4 h-4 text-[#FFD166] transition-transform duration-300 group-hover/solar:rotate-12" />
-                <span className="text-xs text-[#AAB8C9]">Sunrise</span>
-              </div>
-              <span className="text-sm font-bold text-[#F5F8FC] tabular-nums">{sunrise}</span>
+        {/* Card 6: Sunrise & Sunset with Visual Sun Progress Bar */}
+        {sunriseIso && sunsetIso ? (
+          <SunProgressBar
+            sunriseIso={sunriseIso}
+            sunsetIso={sunsetIso}
+            timezone={timezone || 'auto'}
+            className="col-span-2 md:col-span-1"
+          />
+        ) : (
+          <div className="glass-panel rounded-2xl p-4 sm:p-5 flex flex-col justify-between card-hover-effect group/solar cursor-default col-span-2 md:col-span-1">
+            <div className="flex items-center justify-between text-xs text-[#AAB8C9] mb-2">
+              <span className="font-semibold uppercase tracking-wider text-[11px] group-hover/solar:text-[#FFD166] transition-colors">Solar Cycle</span>
+              <Sunrise className="w-4 h-4 text-[#FFD166] transition-transform duration-300 group-hover/solar:scale-125 group-hover/solar:-translate-y-0.5" />
             </div>
-            <div className="flex items-center justify-between p-1 rounded-md hover:bg-white/5 transition-colors">
-              <div className="flex items-center gap-2">
-                <Sunset className="w-4 h-4 text-[#FF965A] transition-transform duration-300 group-hover/solar:-rotate-12" />
-                <span className="text-xs text-[#AAB8C9]">Sunset</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between p-1 rounded-md hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Sunrise className="w-4 h-4 text-[#FFD166]" />
+                  <span className="text-xs text-[#AAB8C9]">Sunrise</span>
+                </div>
+                <span className="text-sm font-bold text-[#F5F8FC] tabular-nums">{sunrise}</span>
               </div>
-              <span className="text-sm font-bold text-[#F5F8FC] tabular-nums">{sunset}</span>
+              <div className="flex items-center justify-between p-1 rounded-md hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Sunset className="w-4 h-4 text-[#FF965A]" />
+                  <span className="text-xs text-[#AAB8C9]">Sunset</span>
+                </div>
+                <span className="text-sm font-bold text-[#F5F8FC] tabular-nums">{sunset}</span>
+              </div>
+            </div>
+            <div className="text-[11px] text-[#AAB8C9]/70 mt-2 truncate group-hover/solar:text-[#AAB8C9] transition-colors">
+              Local daylight cycle
             </div>
           </div>
-          <div className="text-[11px] text-[#AAB8C9]/70 mt-2 truncate group-hover/solar:text-[#AAB8C9] transition-colors">
-            Local daylight cycle
-          </div>
-        </div>
+        )}
       </div>
     </section>
   );

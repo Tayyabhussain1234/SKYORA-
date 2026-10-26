@@ -12,6 +12,7 @@ import { WeatherInsights } from './components/WeatherInsights';
 import { AtmosphericBackground } from './components/AtmosphericBackground';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 import { ErrorState } from './components/ErrorState';
+import { AlertBanner, detectSevereWeather } from './components/AlertBanner';
 
 const STORAGE_KEY_LOCATION = 'skyora_last_location';
 const STORAGE_KEY_UNIT = 'skyora_unit_system';
@@ -117,18 +118,21 @@ export default function App() {
     ? getWeatherInfo(weatherData.current.weatherCode, weatherData.current.isDay).category
     : 'clear';
   const isDay = weatherData ? weatherData.current.isDay : 1;
+  const activeAlert = weatherData ? detectSevereWeather(weatherData, unit) : null;
 
   return (
     <div className="relative min-h-screen text-[#F5F8FC] flex flex-col font-sans">
       {/* Dynamic atmospheric background adapting to weather condition */}
       <AtmosphericBackground category={weatherCategory} isDay={isDay} />
 
-      {/* Top Navigation Bar */}
+      {/* Top Navigation Bar with Alert Icon and Quick Status */}
       <Header
         unit={unit}
         onToggleUnit={handleToggleUnit}
         onRefresh={() => loadWeather(selectedLocation, true)}
         isRefreshing={isRefreshing}
+        activeAlert={activeAlert}
+        cityName={weatherData?.location.name}
       />
 
       {/* Main Container */}
@@ -177,13 +181,16 @@ export default function App() {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="space-y-6 sm:space-y-8"
             >
+              {/* AlertBanner: Severe Weather Warning Strip at top of dashboard */}
+              <AlertBanner weatherData={weatherData} unit={unit} />
+
               {/* FEATURE 1: Current Weather Hero Panel */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.05 }}
               >
-                <CurrentWeather data={weatherData} unit={unit} />
+                <CurrentWeather data={weatherData} unit={unit} activeAlert={activeAlert} />
               </motion.div>
 
               {/* FEATURE 2: 24-Hour Forecast */}
@@ -209,7 +216,13 @@ export default function App() {
 
                 {/* FEATURE 4: Weather Details & Atmospheric Insights */}
                 <div className="lg:col-span-7 w-full">
-                  <WeatherInsights insights={weatherData.insights} unit={unit} />
+                  <WeatherInsights
+                    insights={weatherData.insights}
+                    unit={unit}
+                    sunriseIso={weatherData.daily[0]?.sunrise}
+                    sunsetIso={weatherData.daily[0]?.sunset}
+                    timezone={weatherData.location.timezone}
+                  />
                 </div>
               </motion.div>
             </motion.div>

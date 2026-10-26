@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, ArrowUp, ArrowDown, Clock } from 'lucide-react';
+import { MapPin, ArrowUp, ArrowDown, Clock, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { WeatherData, UnitSystem } from '../types/weather';
 import { getWeatherInfo } from '../utils/weatherCodes';
 import { formatTemp } from '../utils/units';
 import { getLocalCurrentTime } from '../utils/dateTime';
 import { WeatherIcon } from './WeatherIcon';
+import { SevereAlert } from './AlertBanner';
 
 interface CurrentWeatherProps {
   data: WeatherData;
   unit: UnitSystem;
+  activeAlert?: SevereAlert | null;
 }
 
-export const CurrentWeather: React.FC<CurrentWeatherProps> = ({ data, unit }) => {
+export const CurrentWeather: React.FC<CurrentWeatherProps> = ({ data, unit, activeAlert }) => {
   const { location, current, daily, summary, lastUpdated } = data;
   const weatherInfo = getWeatherInfo(current.weatherCode, current.isDay);
 
@@ -44,12 +46,35 @@ export const CurrentWeather: React.FC<CurrentWeatherProps> = ({ data, unit }) =>
         <div className="flex-1 space-y-4">
           {/* Location details */}
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 hover:border-[#65B8F4]/40 hover:bg-white/10 text-xs text-[#65B8F4] font-medium mb-3 transition-all duration-200 cursor-default">
-              <MapPin className="w-3.5 h-3.5 shrink-0 transition-transform duration-300 group-hover/hero:translate-y-[-1px]" />
-              <span>
-                {location.name}
-                {location.admin1 ? `, ${location.admin1}` : ''} · {location.country}
-              </span>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 hover:border-[#65B8F4]/40 hover:bg-white/10 text-xs text-[#65B8F4] font-medium transition-all duration-200 cursor-default">
+                <MapPin className="w-3.5 h-3.5 shrink-0 transition-transform duration-300 group-hover/hero:translate-y-[-1px]" />
+                <span>
+                  {location.name}
+                  {location.admin1 ? `, ${location.admin1}` : ''} · {location.country}
+                </span>
+              </div>
+
+              {/* Alert Status Pill & Icon */}
+              {activeAlert ? (
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('severe-alert-banner')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-xs text-[#FFD166] font-semibold hover:bg-amber-500/30 transition-all duration-200 active:scale-95 animate-pulse cursor-pointer shadow-sm shadow-amber-500/20"
+                  title={activeAlert.title}
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 text-[#FF965A] shrink-0" />
+                  <span>Alert: {activeAlert.title}</span>
+                </button>
+              ) : (
+                <div
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium transition-all duration-200 cursor-default"
+                  title="No active severe weather warnings for this location"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Advisory: Normal Conditions</span>
+                </div>
+              )}
             </div>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#F5F8FC] transition-colors duration-300 group-hover/hero:text-white">

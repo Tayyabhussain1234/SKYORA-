@@ -1,12 +1,15 @@
-import React from 'react';
-import { CloudSun, RotateCw } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { CloudSun, RotateCw, AlertTriangle, ShieldCheck, X, ChevronRight } from 'lucide-react';
 import { UnitSystem } from '../types/weather';
+import { SevereAlert } from './AlertBanner';
 
 interface HeaderProps {
   unit: UnitSystem;
   onToggleUnit: () => void;
   onRefresh: () => void;
   isRefreshing: boolean;
+  activeAlert?: SevereAlert | null;
+  cityName?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -14,7 +17,36 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleUnit,
   onRefresh,
   isRefreshing,
+  activeAlert,
+  cityName,
 }) => {
+  const [showAlertPopover, setShowAlertPopover] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Close popover on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setShowAlertPopover(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleAlertClick = () => {
+    if (activeAlert) {
+      const el = document.getElementById('severe-alert-banner');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        setShowAlertPopover((prev) => !prev);
+      }
+    } else {
+      setShowAlertPopover((prev) => !prev);
+    }
+  };
+
   return (
     <header className="w-full border-b border-white/10 bg-[#101B2D]/70 backdrop-blur-md sticky top-0 z-40 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
@@ -34,7 +66,97 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 relative" ref={popoverRef}>
+          {/* Weather Alert Icon Button */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={handleAlertClick}
+              className={`p-2 rounded-lg border transition-all duration-200 shrink-0 relative group/alert active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#65B8F4] ${
+                activeAlert
+                  ? 'bg-amber-500/20 border-amber-500/50 text-[#FFD166] hover:bg-amber-500/30 shadow-lg shadow-amber-500/20'
+                  : 'border-white/10 text-[#AAB8C9] hover:text-[#65B8F4] hover:bg-white/10 hover:border-[#65B8F4]/30'
+              }`}
+              title={activeAlert ? `Alert: ${activeAlert.title}` : 'Weather Alert Status'}
+              aria-label="Weather alert status"
+            >
+              {activeAlert ? (
+                <AlertTriangle className="w-4 h-4 text-[#FFD166] animate-pulse" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 transition-transform duration-300 group-hover/alert:scale-110" />
+              )}
+
+              {/* Pulsing indicator dot when active alert exists */}
+              {activeAlert && (
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF965A] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF965A] border-2 border-[#101B2D]" />
+                </span>
+              )}
+            </button>
+
+            {/* Alert Status Popover */}
+            {showAlertPopover && (
+              <div className="absolute right-0 mt-2 w-80 rounded-2xl glass-dropdown p-4 z-50 animate-fadeIn shadow-2xl border border-white/15">
+                <div className="flex items-start justify-between gap-2 pb-2 mb-2 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    {activeAlert ? (
+                      <AlertTriangle className="w-4 h-4 text-[#FF965A] shrink-0" />
+                    ) : (
+                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    )}
+                    <span className="text-xs font-bold text-[#F5F8FC]">
+                      {activeAlert ? 'Severe Weather Alert' : 'Advisory Status'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAlertPopover(false)}
+                    className="p-1 text-[#AAB8C9] hover:text-white rounded-md hover:bg-white/10 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {activeAlert ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-[#FFD166]">
+                        {activeAlert.title}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-white/10 text-white">
+                        {activeAlert.level}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#AAB8C9] leading-relaxed">
+                      {activeAlert.description}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAlertPopover(false);
+                        document.getElementById('severe-alert-banner')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }}
+                      className="w-full mt-2 py-1.5 px-3 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-xs font-semibold text-[#FFD166] flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <span>View Safety Advice</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-[#F5F8FC]">
+                      All Clear in {cityName || 'Current Location'}
+                    </p>
+                    <p className="text-xs text-[#AAB8C9] leading-relaxed">
+                      No severe weather advisories or warnings active. Meteorological sensors report normal conditions.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Unit Toggle */}
           <div
             className="flex items-center p-1 bg-[#193B5A]/50 border border-white/10 rounded-lg shadow-inner transition-colors hover:border-[#65B8F4]/30"

@@ -172,8 +172,8 @@ export async function fetchWeatherData(location: LocationData, signal?: AbortSig
     visibility: visibilityKm,
     uvIndex: uvIndexVal,
     uvCategory: getUvCategory(uvIndexVal),
-    sunrise: dailyRaw.sunrise?.[0] ? formatTimeFromIso(dailyRaw.sunrise[0]) : '06:00 AM',
-    sunset: dailyRaw.sunset?.[0] ? formatTimeFromIso(dailyRaw.sunset[0]) : '06:00 PM',
+    sunrise: dailyRaw.sunrise?.[0] ? formatTimeFromIso(dailyRaw.sunrise[0]) : '—',
+    sunset: dailyRaw.sunset?.[0] ? formatTimeFromIso(dailyRaw.sunset[0]) : '—',
   };
 
   const summary = generateWeatherSummary(
